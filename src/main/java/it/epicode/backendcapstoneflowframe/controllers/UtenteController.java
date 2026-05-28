@@ -1,6 +1,7 @@
 package it.epicode.backendcapstoneflowframe.controllers;
 
 import it.epicode.backendcapstoneflowframe.entities.Utente;
+import it.epicode.backendcapstoneflowframe.payloads.PasswordChangeDTO;
 import it.epicode.backendcapstoneflowframe.payloads.UserUpdateDTO;
 import it.epicode.backendcapstoneflowframe.services.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,5 +26,10 @@ public class UtenteController {
     @PutMapping("/me")
     public Utente updateCurrentUser(@AuthenticationPrincipal Utente currentUser, @RequestBody @Validated UserUpdateDTO body) {
         return utenteService.updateProfile(currentUser.getId(), body);
+    }
+
+    @PutMapping("/me/password")
+    public Utente updateCurrentPassword(@AuthenticationPrincipal Utente currentUser, @RequestBody @Validated PasswordChangeDTO body) {
+        return utenteService.changePassword(currentUser.getId(), body);
     }
 }

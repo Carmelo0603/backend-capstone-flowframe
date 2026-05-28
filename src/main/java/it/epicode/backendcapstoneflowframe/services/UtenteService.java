@@ -5,6 +5,7 @@ import it.epicode.backendcapstoneflowframe.entities.Ruolo;
 import it.epicode.backendcapstoneflowframe.entities.Utente;
 import it.epicode.backendcapstoneflowframe.exceptions.BadRequestException;
 import it.epicode.backendcapstoneflowframe.exceptions.NotFoundException;
+import it.epicode.backendcapstoneflowframe.payloads.PasswordChangeDTO;
 import it.epicode.backendcapstoneflowframe.payloads.UserRegisterDTO;
 import it.epicode.backendcapstoneflowframe.payloads.UserUpdateDTO;
 import it.epicode.backendcapstoneflowframe.repositories.UtenteRepository;
@@ -22,6 +23,9 @@ public class UtenteService {
 
     @Autowired
     private PasswordEncoder bcrypt;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     public Utente findById(UUID id) {
         return utenteRepository.findById(id).orElseThrow(() -> new NotFoundException(id));
@@ -65,6 +69,21 @@ public class UtenteService {
         u.setUsername(body.username());
         u.setEmail(body.email());
 
+        return utenteRepository.save(u);
+    }
+
+    public Utente changePassword(UUID id, PasswordChangeDTO body) {
+        Utente u = this.findById(id);
+
+        if (!passwordEncoder.matches(body.vecchiaPassword(), u.getPassword())) {
+            throw new BadRequestException("La vecchia password è errata.");
+        }
+
+        if (passwordEncoder.matches(body.nuovaPassword(), u.getPassword())) {
+            throw new BadRequestException("La nuova password non può essere uguale alla precedente.");
+        }
+
+        u.setPassword(passwordEncoder.encode(body.nuovaPassword()));
         return utenteRepository.save(u);
     }
 }
