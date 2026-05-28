@@ -6,6 +6,7 @@ import it.epicode.backendcapstoneflowframe.entities.Utente;
 import it.epicode.backendcapstoneflowframe.exceptions.BadRequestException;
 import it.epicode.backendcapstoneflowframe.exceptions.NotFoundException;
 import it.epicode.backendcapstoneflowframe.payloads.UserRegisterDTO;
+import it.epicode.backendcapstoneflowframe.payloads.UserUpdateDTO;
 import it.epicode.backendcapstoneflowframe.repositories.UtenteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,6 +46,24 @@ public class UtenteService {
         u.setPassword(bcrypt.encode(dto.password()));
         // Assegnazione ruolo di default per le nuove registrazioni
         u.setRuolo(Ruolo.UTENTE_NORMALE);
+
+        return utenteRepository.save(u);
+    }
+    public Utente updateProfile(UUID id, UserUpdateDTO body) {
+        Utente u = this.findById(id);
+
+
+        if (!u.getEmail().equals(body.email()) && utenteRepository.findByEmail(body.email()).isPresent()) {
+            throw new BadRequestException("L'email " + body.email() + " è già in uso.");
+        }
+
+
+        if (!u.getUsername().equals(body.username()) && utenteRepository.findByUsername(body.username()).isPresent()) {
+            throw new BadRequestException("Lo username " + body.username() + " è già in uso.");
+        }
+
+        u.setUsername(body.username());
+        u.setEmail(body.email());
 
         return utenteRepository.save(u);
     }
