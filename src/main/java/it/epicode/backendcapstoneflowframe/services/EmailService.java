@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class EmailService {
@@ -24,13 +25,15 @@ public class EmailService {
         System.out.println("Email di benvenuto inviata con successo a " + to);
     }
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     public void sendVerificationEmail(String to, String username, String verificationCode) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
         message.setSubject("Azione Richiesta: Verifica la tua email per FLOWFRAME");
 
-
-        String verificationUrl = "http://localhost:5173/verify?code=" + verificationCode;
+        String verificationUrl = frontendUrl + "/verify?code=" + verificationCode;
 
         message.setText("Ciao " + username + ",\n\n" +
                 "Per completare la registrazione e accedere a FLOWFRAME, devi confermare questo indirizzo email cliccando sul link sottostante:\n\n" +
@@ -39,6 +42,5 @@ public class EmailService {
                 "Il Team di Sviluppo");
 
         mailSender.send(message);
-        System.out.println("Email di verifica inviata a " + to);
     }
 }
