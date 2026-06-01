@@ -35,6 +35,12 @@ public class Utente implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "is_verified")
+    private Boolean isVerified = false;
+
+    @Column(name = "verification_code")
+    private String verificationCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Ruolo ruolo;

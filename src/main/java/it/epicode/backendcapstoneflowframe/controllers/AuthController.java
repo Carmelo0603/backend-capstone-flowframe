@@ -32,4 +32,10 @@ public class AuthController {
     public Utente register(@RequestBody @Validated UserRegisterDTO body) {
         return utenteService.save(body);
     }
+
+    @GetMapping("/verify")
+    public String verifyEmail(@RequestParam("code") String code) {
+        utenteService.verifyUser(code);
+        return "Email verificata con successo! Ora puoi effettuare il login.";
+    }
 }

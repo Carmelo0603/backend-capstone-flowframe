@@ -14,7 +14,6 @@ public class AuthService {
     @Autowired
     private UtenteService utenteService;
 
-    // Qui hai chiamato l'istanza passwordEncoder, quindi useremo questo nome
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -23,8 +22,11 @@ public class AuthService {
 
     public String authenticateUser(UserLoginDTO dto) {
         Utente u = utenteService.findByEmail(dto.email());
+        if (!u.getIsVerified()) {
+            throw new UnauthorizedException("Account non attivato. Controlla la tua casella email e clicca sul link di verifica.");
+        }
 
-        // Utilizzo corretto dell'istanza iniettata per confrontare la password in chiaro con l'hash
+
         if (passwordEncoder.matches(dto.password(), u.getPassword())) {
             return jwtTools.createToken(u);
         } else {

@@ -1,6 +1,5 @@
 package it.epicode.backendcapstoneflowframe.services;
 
-
 import it.epicode.backendcapstoneflowframe.entities.Ruolo;
 import it.epicode.backendcapstoneflowframe.entities.Utente;
 import it.epicode.backendcapstoneflowframe.exceptions.BadRequestException;
@@ -19,6 +18,9 @@ import java.util.UUID;
 public class UtenteService {
 
     @Autowired
+    private EmailService emailService;
+
+    @Autowired
     private UtenteRepository utenteRepository;
 
     @Autowired
@@ -35,7 +37,7 @@ public class UtenteService {
         return utenteRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("Utente con email " + email + " non trovato."));
     }
 
-    // Creazione utente con hash della password tramite BCrypt
+
     public Utente save(UserRegisterDTO dto) {
         if (utenteRepository.findByEmail(dto.email()).isPresent()) {
             throw new BadRequestException("L'email " + dto.email() + " è già in uso.");
@@ -48,19 +50,28 @@ public class UtenteService {
         u.setUsername(dto.username());
         u.setEmail(dto.email());
         u.setPassword(bcrypt.encode(dto.password()));
-        // Assegnazione ruolo di default per le nuove registrazioni
+
         u.setRuolo(Ruolo.UTENTE_NORMALE);
 
-        return utenteRepository.save(u);
+
+        String codiceVerifica = UUID.randomUUID().toString();
+        u.setVerificationCode(codiceVerifica);
+
+
+        Utente utenteSalvato = utenteRepository.save(u);
+
+
+        emailService.sendVerificationEmail(utenteSalvato.getEmail(), utenteSalvato.getUsername(), codiceVerifica);
+
+        return utenteSalvato;
     }
+
     public Utente updateProfile(UUID id, UserUpdateDTO body) {
         Utente u = this.findById(id);
-
 
         if (!u.getEmail().equals(body.email()) && utenteRepository.findByEmail(body.email()).isPresent()) {
             throw new BadRequestException("L'email " + body.email() + " è già in uso.");
         }
-
 
         if (!u.getUsername().equals(body.username()) && utenteRepository.findByUsername(body.username()).isPresent()) {
             throw new BadRequestException("Lo username " + body.username() + " è già in uso.");
@@ -85,5 +96,16 @@ public class UtenteService {
 
         u.setPassword(passwordEncoder.encode(body.nuovaPassword()));
         return utenteRepository.save(u);
+    }
+
+    public boolean verifyUser(String verificationCode) {
+
+        Utente u = utenteRepository.findByVerificationCode(verificationCode)
+                .orElseThrow(() -> new BadRequestException("Codice di verifica non valido o scaduto."));
+
+        u.setIsVerified(true);
+        u.setVerificationCode(null);
+        utenteRepository.save(u);
+        return true;
     }
 }
